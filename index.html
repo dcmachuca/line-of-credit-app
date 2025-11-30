@@ -146,7 +146,7 @@
         return model.trans[model.trans.length - 1].balance;
     }
 
-    // Interest 
+     
     function applyInterestOnce(balance) {
         if (balance < 0) {
             return balance * (1 + model.negRate);
@@ -157,7 +157,7 @@
         }
     }
 
-    // Page Handling
+    
     function showPage(id) {
         var pages = document.getElementsByClassName("page");
         for (var i=0; i<pages.length; i++) pages[i].style.display = "none";
@@ -178,7 +178,7 @@
         showPage("loginPage");
     }
 
-   // Login Page
+   
     function login() {
         var pw = document.getElementById("loginPassword").value;
         if (pw === model.password) {
@@ -189,7 +189,7 @@
         }
     }
 
-    // Password Login
+    
     function fillInfo() {
         document.getElementById("infoBank").innerHTML = model.bankName;
         document.getElementById("infoDate").innerHTML = model.openDate;
@@ -214,7 +214,7 @@
         document.getElementById("infoMsg").innerHTML = "Password updated.";
     }
 
-  // Settings
+ 
     function fillSettings() {
         document.getElementById("setBank").value = model.bankName;
         document.getElementById("setDate").value = model.openDate;
@@ -250,7 +250,7 @@
         document.getElementById("setMsg").innerHTML = "Saved.";
     }
 
-    // Transactions
+    
     function addTrans() {
         var msg = "";
         var date = document.getElementById("tDate").value;
@@ -273,7 +273,7 @@
 
         var signed = (type === "debit") ? -amount : amount;
 
-        // Interest
+      
         var balBefore = currBal();
         var balAfterInterest = applyInterestOnce(balBefore);
         var newBal = balAfterInterest + signed;
@@ -320,13 +320,13 @@
         document.getElementById("transBal").innerHTML = currBal().toFixed(2);
     }
 
-    // Graph
+    
     function drawGraph() {
         var c = document.getElementById("graph");
         var ctx = c.getContext("2d");
         ctx.clearRect(0,0,c.width,c.height);
 
-        // Get points: start plus each transaction
+       
         var xs = [];
         var ys = [];
         xs.push(0);
@@ -340,7 +340,7 @@
             return;
         }
 
-        // Find min and max
+       
         var minY = ys[0], maxY = ys[0];
         for (var j=1;j<ys.length;j++){
             if (ys[j]<minY) minY=ys[j];
@@ -348,19 +348,18 @@
         }
         if (minY === maxY) { minY -= 1; maxY += 1; }
 
-        // Margins
+       
         var left = 40, bottom = 20, top = 10, right = 10;
         var w = c.width - left - right;
         var h = c.height - top - bottom;
 
-        // Axes
         ctx.beginPath();
         ctx.moveTo(left, top);
         ctx.lineTo(left, top+h);
         ctx.lineTo(left+w, top+h);
         ctx.stroke();
 
-        // Draw line
+    
         ctx.beginPath();
         for (var k=0;k<xs.length;k++){
             var x = left + (xs[k]/(xs.length-1))*w;
@@ -374,7 +373,7 @@
         ctx.fillText("Balance", 5,15);
     }
 
-    // Recommendations
+ 
     function updateRec() {
         var b = currBal();
         var txt = "";
@@ -407,6 +406,7 @@
 
 </body>
 </html>
+
 
 
 
