@@ -18,7 +18,7 @@
 <h1>Line of Credit Manager</h1>
 <div id="topInfo"></div>
 
-<!-- LOGIN PAGE -->
+// Login Page
 <div id="loginPage" class="page" style="display:block;">
     <h2>Login</h2>
     <label>Password:
@@ -29,7 +29,7 @@
     <div id="loginMsg" style="color:red;"></div>
 </div>
 
-<!-- MENU PAGE -->
+// Menu Page
 <div id="menuPage" class="page">
     <h2>Menu</h2>
     <button onclick="showPage('infoPage')">1. Info / Change Password</button><br>
@@ -40,7 +40,7 @@
     <button onclick="logout()">Logout</button>
 </div>
 
-<!-- INFO PAGE -->
+// Info Page
 <div id="infoPage" class="page">
     <h2>Account Info</h2>
     <p>Bank: <span id="infoBank"></span></p>
@@ -59,7 +59,7 @@
     <div id="infoMsg"></div>
 </div>
 
-<!-- SETTINGS PAGE -->
+// Settings Page
 <div id="settingsPage" class="page">
     <h2>Basic Info</h2>
     <label>Bank name:
@@ -82,7 +82,7 @@
     <div id="setMsg"></div>
 </div>
 
-<!-- TRANSACTION PAGE -->
+// Transaction Page
 <div id="transPage" class="page">
     <h2>Credit / Debit</h2>
     <label>Date (YYYY-MM-DD, blank = today):
@@ -114,7 +114,7 @@
     </table>
 </div>
 
-<!-- GRAPH PAGE -->
+// Graph Page
 <div id="graphPage" class="page">
     <h2>Balance Graph</h2>
     <canvas id="graph" width="600" height="300" style="border:1px solid #000;"></canvas><br>
@@ -122,7 +122,7 @@
     <button onclick="showPage('menuPage')">Back</button>
 </div>
 
-<!-- RECOMMENDATIONS PAGE -->
+// Rec Page
 <div id="recPage" class="page">
     <h2>Recommendations</h2>
     <textarea id="recText" rows="12" cols="70" readonly></textarea><br>
@@ -131,16 +131,15 @@
 </div>
 
 <script>
-    // ---------- SIMPLE DATA MODEL ----------
     var model = {
         bankName: "My Bank",
         openDate: new Date().toISOString().substring(0,10),
         password: "1234",
-        maxNeg: 1000.0,   // p
-        negRate: 0.10,    // x
-        posRate: 0.02,    // y
+        maxNeg: 1000.0,   
+        negRate: 0.10,    
+        posRate: 0.02,    
         startBal: 0.0,
-        trans: []         // list of {date, amount, balance, type, note}
+        trans: []        
     };
 
     function currBal() {
@@ -148,7 +147,7 @@
         return model.trans[model.trans.length - 1].balance;
     }
 
-    // For simplicity: each time we post a transaction, we apply interest ONCE
+    // Interest 
     function applyInterestOnce(balance) {
         if (balance < 0) {
             return balance * (1 + model.negRate);
@@ -159,7 +158,7 @@
         }
     }
 
-    // ---------- PAGE HANDLING ----------
+    // Page Handling
     function showPage(id) {
         var pages = document.getElementsByClassName("page");
         for (var i=0; i<pages.length; i++) pages[i].style.display = "none";
@@ -180,7 +179,7 @@
         showPage("loginPage");
     }
 
-    // ---------- LOGIN ----------
+   // Login Page
     function login() {
         var pw = document.getElementById("loginPassword").value;
         if (pw === model.password) {
@@ -191,7 +190,7 @@
         }
     }
 
-    // ---------- INFO / PASSWORD ----------
+    // Password Login
     function fillInfo() {
         document.getElementById("infoBank").innerHTML = model.bankName;
         document.getElementById("infoDate").innerHTML = model.openDate;
@@ -216,7 +215,7 @@
         document.getElementById("infoMsg").innerHTML = "Password updated.";
     }
 
-    // ---------- SETTINGS ----------
+  // Settings
     function fillSettings() {
         document.getElementById("setBank").value = model.bankName;
         document.getElementById("setDate").value = model.openDate;
@@ -252,7 +251,7 @@
         document.getElementById("setMsg").innerHTML = "Saved.";
     }
 
-    // ---------- TRANSACTIONS ----------
+    // Transactions
     function addTrans() {
         var msg = "";
         var date = document.getElementById("tDate").value;
@@ -275,7 +274,7 @@
 
         var signed = (type === "debit") ? -amount : amount;
 
-        // interest once on current balance
+        // Interest
         var balBefore = currBal();
         var balAfterInterest = applyInterestOnce(balBefore);
         var newBal = balAfterInterest + signed;
@@ -322,13 +321,13 @@
         document.getElementById("transBal").innerHTML = currBal().toFixed(2);
     }
 
-    // ---------- GRAPH ----------
+    // Graph
     function drawGraph() {
         var c = document.getElementById("graph");
         var ctx = c.getContext("2d");
         ctx.clearRect(0,0,c.width,c.height);
 
-        // get points: start plus each transaction
+        // Get points: start plus each transaction
         var xs = [];
         var ys = [];
         xs.push(0);
@@ -342,7 +341,7 @@
             return;
         }
 
-        // find min and max
+        // Find min and max
         var minY = ys[0], maxY = ys[0];
         for (var j=1;j<ys.length;j++){
             if (ys[j]<minY) minY=ys[j];
@@ -350,19 +349,19 @@
         }
         if (minY === maxY) { minY -= 1; maxY += 1; }
 
-        // margins
+        // Margins
         var left = 40, bottom = 20, top = 10, right = 10;
         var w = c.width - left - right;
         var h = c.height - top - bottom;
 
-        // axes
+        // Axes
         ctx.beginPath();
         ctx.moveTo(left, top);
         ctx.lineTo(left, top+h);
         ctx.lineTo(left+w, top+h);
         ctx.stroke();
 
-        // draw line
+        // Draw line
         ctx.beginPath();
         for (var k=0;k<xs.length;k++){
             var x = left + (xs[k]/(xs.length-1))*w;
@@ -376,7 +375,7 @@
         ctx.fillText("Balance", 5,15);
     }
 
-    // ---------- RECOMMENDATIONS ----------
+    // Recommendations
     function updateRec() {
         var b = currBal();
         var txt = "";
@@ -409,3 +408,4 @@
 
 </body>
 </html>
+
