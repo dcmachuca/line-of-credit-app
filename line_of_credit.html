@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Line of Credit App (Simple)</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .page { display:none; border:1px solid #ccc; padding:10px; margin:10px; }
+        .page h2 { margin-top:0; }
+        table { border-collapse: collapse; width:100%; }
+        th, td { border:1px solid #ccc; padding:4px; font-size:12px; }
+        label { display:block; margin-top:5px; }
+        input, button, textarea { margin-top:3px; }
+    </style>
+</head>
+<body>
+
+<h1>Line of Credit Manager</h1>
+<div id="topInfo"></div>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="page" style="display:block;">
+    <h2>Login</h2>
+    <label>Password:
+        <input type="password" id="loginPassword">
+    </label>
+    <button onclick="login()">Login</button>
+    <p>Default password is <b>1234</b>.</p>
+    <div id="loginMsg" style="color:red;"></div>
+</div>
+
+<!-- MENU PAGE -->
+<div id="menuPage" class="page">
+    <h2>Menu</h2>
+    <button onclick="showPage('infoPage')">1. Info / Change Password</button><br>
+    <button onclick="showPage('settingsPage')">2. Change Basic Info</button><br>
+    <button onclick="showPage('transPage')">3. Enter Credit / Debit</button><br>
+    <button onclick="showPage('graphPage'); drawGraph();">4. Graph Balance</button><br>
+    <button onclick="showPage('recPage'); updateRec();">5. Recommendations</button><br><br>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<!-- INFO PAGE -->
+<div id="infoPage" class="page">
+    <h2>Account Info</h2>
+    <p>Bank: <span id="infoBank"></span></p>
+    <p>Date opened: <span id="infoDate"></span></p>
+    <p>Current balance: <span id="infoBal"></span></p>
+
+    <h3>Change Password</h3>
+    <label>Old password:
+        <input type="password" id="oldPw">
+    </label>
+    <label>New password:
+        <input type="password" id="newPw">
+    </label>
+    <button onclick="changePassword()">Save Password</button>
+    <button onclick="showPage('menuPage')">Back</button>
+    <div id="infoMsg"></div>
+</div>
+
+<!-- SETTINGS PAGE -->
+<div id="settingsPage" class="page">
+    <h2>Basic Info</h2>
+    <label>Bank name:
+        <input type="text" id="setBank">
+    </label>
+    <label>Date opened (YYYY-MM-DD):
+        <input type="text" id="setDate">
+    </label>
+    <label>Maximum negative balance p (positive):
+        <input type="number" id="setMaxNeg" step="0.01">
+    </label>
+    <label>Negative interest rate x (e.g. 0.10):
+        <input type="number" id="setNegRate" step="0.01">
+    </label>
+    <label>Positive interest rate y (e.g. 0.02):
+        <input type="number" id="setPosRate" step="0.01">
+    </label>
+    <button onclick="saveSettings()">Save</button>
+    <button onclick="showPage('menuPage')">Back</button>
+    <div id="setMsg"></div>
+</div>
+
+<!-- TRANSACTION PAGE -->
+<div id="transPage" class="page">
+    <h2>Credit / Debit</h2>
+    <label>Date (YYYY-MM-DD, blank = today):
+        <input type="text" id="tDate">
+    </label>
+    <label>Amount (positive number):
+        <input type="number" id="tAmount" step="0.01">
+    </label>
+    <label>
+        <input type="radio" name="tType" value="credit" checked> Credit (deposit/payment)
+    </label>
+    <label>
+        <input type="radio" name="tType" value="debit"> Debit (withdraw/spend)
+    </label>
+    <label>Note:
+        <input type="text" id="tNote">
+    </label>
+    <button onclick="addTrans()">Add</button>
+    <button onclick="showPage('menuPage')">Back</button>
+    <div id="tMsg"></div>
+    <p><b>Current balance: <span id="transBal"></span></b></p>
+
+    <h3>Transactions</h3>
+    <table id="tTable">
+        <thead>
+        <tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance after</th><th>Note</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- GRAPH PAGE -->
+<div id="graphPage" class="page">
+    <h2>Balance Graph</h2>
+    <canvas id="graph" width="600" height="300" style="border:1px solid #000;"></canvas><br>
+    <button onclick="drawGraph()">Refresh</button>
+    <button onclick="showPage('menuPage')">Back</button>
+</div>
+
+<!-- RECOMMENDATIONS PAGE -->
+<div id="recPage" class="page">
+    <h2>Recommendations</h2>
+    <textarea id="recText" rows="12" cols="70" readonly></textarea><br>
+    <button onclick="updateRec()">Refresh</button>
+    <button onclick="showPage('menuPage')">Back</button>
+</div>
+
+<script>
+    // ---------- SIMPLE DATA MODEL ----------
+    var model = {
+        bankName: "My Bank",
+        openDate: new Date().toISOString().substring(0,10),
+        password: "1234",
+        maxNeg: 1000.0,   // p
+        negRate: 0.10,    // x
+        posRate: 0.02,    // y
+        startBal: 0.0,
+        trans: []         // list of {date, amount, balance, type, note}
+    };
+
+    function currBal() {
+        if (model.trans.length === 0) return model.startBal;
+        return model.trans[model.trans.length - 1].balance;
+    }
+
+    // For simplicity: each time we post a transaction, we apply interest ONCE
+    function applyInterestOnce(balance) {
+        if (balance < 0) {
+            return balance * (1 + model.negRate);
+        } else if (balance > 0) {
+            return balance * (1 + model.posRate);
+        } else {
+            return balance;
+        }
+    }
+
+    // ---------- PAGE HANDLING ----------
+    function showPage(id) {
+        var pages = document.getElementsByClassName("page");
+        for (var i=0; i<pages.length; i++) pages[i].style.display = "none";
+        document.getElementById(id).style.display = "block";
+
+        document.getElementById("topInfo").innerHTML =
+            "Bank: " + model.bankName + " | Balance: " + currBal().toFixed(2);
+
+        if (id === "infoPage") fillInfo();
+        if (id === "settingsPage") fillSettings();
+        if (id === "transPage") refreshTransTable();
+    }
+
+    function logout() {
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("loginMsg").innerHTML = "";
+        document.getElementById("topInfo").innerHTML = "";
+        showPage("loginPage");
+    }
+
+    // ---------- LOGIN ----------
+    function login() {
+        var pw = document.getElementById("loginPassword").value;
+        if (pw === model.password) {
+            document.getElementById("loginMsg").innerHTML = "";
+            showPage("menuPage");
+        } else {
+            document.getElementById("loginMsg").innerHTML = "Wrong password.";
+        }
+    }
+
+    // ---------- INFO / PASSWORD ----------
+    function fillInfo() {
+        document.getElementById("infoBank").innerHTML = model.bankName;
+        document.getElementById("infoDate").innerHTML = model.openDate;
+        document.getElementById("infoBal").innerHTML = currBal().toFixed(2);
+        document.getElementById("infoMsg").innerHTML = "";
+        document.getElementById("oldPw").value = "";
+        document.getElementById("newPw").value = "";
+    }
+
+    function changePassword() {
+        var oldPw = document.getElementById("oldPw").value;
+        var newPw = document.getElementById("newPw").value;
+        if (oldPw !== model.password) {
+            document.getElementById("infoMsg").innerHTML = "Old password incorrect.";
+            return;
+        }
+        if (newPw === "") {
+            document.getElementById("infoMsg").innerHTML = "New password cannot be empty.";
+            return;
+        }
+        model.password = newPw;
+        document.getElementById("infoMsg").innerHTML = "Password updated.";
+    }
+
+    // ---------- SETTINGS ----------
+    function fillSettings() {
+        document.getElementById("setBank").value = model.bankName;
+        document.getElementById("setDate").value = model.openDate;
+        document.getElementById("setMaxNeg").value = model.maxNeg;
+        document.getElementById("setNegRate").value = model.negRate;
+        document.getElementById("setPosRate").value = model.posRate;
+        document.getElementById("setMsg").innerHTML = "";
+    }
+
+    function saveSettings() {
+        var msg = "";
+        var bank = document.getElementById("setBank").value;
+        var date = document.getElementById("setDate").value;
+        var maxNeg = parseFloat(document.getElementById("setMaxNeg").value);
+        var negRate = parseFloat(document.getElementById("setNegRate").value);
+        var posRate = parseFloat(document.getElementById("setPosRate").value);
+
+        if (bank === "") msg = "Bank name required.";
+        else if (isNaN(Date.parse(date))) msg = "Bad date.";
+        else if (!(maxNeg > 0)) msg = "Max negative must be positive.";
+        else if (isNaN(negRate) || isNaN(posRate)) msg = "Bad rate.";
+
+        if (msg !== "") {
+            document.getElementById("setMsg").innerHTML = msg;
+            return;
+        }
+
+        model.bankName = bank;
+        model.openDate = date;
+        model.maxNeg = maxNeg;
+        model.negRate = negRate;
+        model.posRate = posRate;
+        document.getElementById("setMsg").innerHTML = "Saved.";
+    }
+
+    // ---------- TRANSACTIONS ----------
+    function addTrans() {
+        var msg = "";
+        var date = document.getElementById("tDate").value;
+        if (date === "") date = new Date().toISOString().substring(0,10);
+        if (isNaN(Date.parse(date))) msg = "Bad date";
+
+        var amount = parseFloat(document.getElementById("tAmount").value);
+        if (!(amount > 0)) msg = "Amount must be positive";
+
+        if (msg !== "") {
+            document.getElementById("tMsg").innerHTML = msg;
+            return;
+        }
+
+        var typeElems = document.getElementsByName("tType");
+        var type = "credit";
+        if (typeElems[1].checked) type = "debit";
+
+        var note = document.getElementById("tNote").value;
+
+        var signed = (type === "debit") ? -amount : amount;
+
+        // interest once on current balance
+        var balBefore = currBal();
+        var balAfterInterest = applyInterestOnce(balBefore);
+        var newBal = balAfterInterest + signed;
+
+        if (newBal < -model.maxNeg) {
+            document.getElementById("tMsg").innerHTML =
+                "Would exceed max negative balance (" + (-model.maxNeg) + ").";
+            return;
+        }
+
+        model.trans.push({
+            date: date,
+            amount: signed,
+            balance: newBal,
+            type: type,
+            note: note
+        });
+
+        document.getElementById("tDate").value = "";
+        document.getElementById("tAmount").value = "";
+        document.getElementById("tNote").value = "";
+        document.getElementById("tMsg").innerHTML = "Transaction added.";
+        refreshTransTable();
+    }
+
+    function refreshTransTable() {
+        var tbody = document.getElementById("tTable").getElementsByTagName("tbody")[0];
+        tbody.innerHTML = "";
+        for (var i=0; i<model.trans.length; i++) {
+            var t = model.trans[i];
+            var row = document.createElement("tr");
+            function cell(txt){
+                var td = document.createElement("td");
+                td.appendChild(document.createTextNode(txt));
+                row.appendChild(td);
+            }
+            cell(t.date);
+            cell(t.type);
+            cell(t.amount.toFixed(2));
+            cell(t.balance.toFixed(2));
+            cell(t.note);
+            tbody.appendChild(row);
+        }
+        document.getElementById("transBal").innerHTML = currBal().toFixed(2);
+    }
+
+    // ---------- GRAPH ----------
+    function drawGraph() {
+        var c = document.getElementById("graph");
+        var ctx = c.getContext("2d");
+        ctx.clearRect(0,0,c.width,c.height);
+
+        // get points: start plus each transaction
+        var xs = [];
+        var ys = [];
+        xs.push(0);
+        ys.push(model.startBal);
+        for (var i=0; i<model.trans.length; i++) {
+            xs.push(i+1);
+            ys.push(model.trans[i].balance);
+        }
+        if (xs.length === 1) {
+            ctx.fillText("No data yet.", 10,20);
+            return;
+        }
+
+        // find min and max
+        var minY = ys[0], maxY = ys[0];
+        for (var j=1;j<ys.length;j++){
+            if (ys[j]<minY) minY=ys[j];
+            if (ys[j]>maxY) maxY=ys[j];
+        }
+        if (minY === maxY) { minY -= 1; maxY += 1; }
+
+        // margins
+        var left = 40, bottom = 20, top = 10, right = 10;
+        var w = c.width - left - right;
+        var h = c.height - top - bottom;
+
+        // axes
+        ctx.beginPath();
+        ctx.moveTo(left, top);
+        ctx.lineTo(left, top+h);
+        ctx.lineTo(left+w, top+h);
+        ctx.stroke();
+
+        // draw line
+        ctx.beginPath();
+        for (var k=0;k<xs.length;k++){
+            var x = left + (xs[k]/(xs.length-1))*w;
+            var y = top + h - ((ys[k]-minY)/(maxY-minY))*h;
+            if (k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle = "blue";
+        ctx.stroke();
+        ctx.strokeStyle = "black";
+
+        ctx.fillText("Balance", 5,15);
+    }
+
+    // ---------- RECOMMENDATIONS ----------
+    function updateRec() {
+        var b = currBal();
+        var txt = "";
+
+        if (b < -0.9*model.maxNeg) {
+            txt += "Balance is very close to maximum negative.\n";
+            txt += "Recommendation: Pay as soon as possible.\n";
+        } else if (b < -0.5*model.maxNeg) {
+            txt += "Balance is strongly negative.\n";
+            txt += "Recommendation: Reduce spending and make a plan.\n";
+        } else if (b < 0) {
+            txt += "Balance is slightly negative.\n";
+            txt += "Recommendation: Try to get to zero soon.\n";
+        } else if (b < 0.5*model.maxNeg) {
+            txt += "Balance is positive.\n";
+            txt += "Recommendation: Keep watching your spending.\n";
+        } else {
+            txt += "Balance is very positive.\n";
+            txt += "Recommendation: Maybe move extra money to savings or investments.\n";
+        }
+
+        txt += "\nCurrent balance: " + b.toFixed(2);
+        txt += "\nMax negative: -" + model.maxNeg.toFixed(2);
+        txt += "\nNegative interest x: " + (model.negRate*100).toFixed(1) + "%";
+        txt += "\nPositive interest y: " + (model.posRate*100).toFixed(1) + "%";
+
+        document.getElementById("recText").value = txt;
+    }
+</script>
+
+</body>
+</html>
