@@ -1,148 +1,219 @@
 <!DOCTYPE html>
 <html>
-<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
-<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
-<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-
 <head>
     <meta charset="UTF-8">
-    <title>Line of Credit App (Simple)</title>
+    <title>Line of Credit App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet"
+          href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; }
-        .page { display:none; border:1px solid #ccc; padding:10px; margin:10px; }
-        .page h2 { margin-top:0; }
-        table { border-collapse: collapse; width:100%; }
-        th, td { border:1px solid #ccc; padding:4px; font-size:12px; }
-        label { display:block; margin-top:5px; }
-        input, button, textarea { margin-top:3px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 4px; font-size: 12px; }
+        textarea { width: 100%; box-sizing: border-box; }
+        label { display: block; margin-top: 5px; }
+        #graph { border: 1px solid #000; }
     </style>
 </head>
 <body>
 
-<h1>Line of Credit Manager</h1>
-<div id="topInfo"></div>
+<div data-role="page" id="loginPage">
 
+    <div data-role="header">
+        <h1>Line of Credit - Login</h1>
+    </div>
 
-<div id="loginPage" class="page" style="display:block;">
-    <h2>Login</h2>
-    <label>Password:
-        <input type="password" id="loginPassword">
-    </label>
-    <button onclick="login()">Login</button>
-    <p>Default password is <b>1234</b>.</p>
-    <div id="loginMsg" style="color:red;"></div>
+    <div data-role="content">
+        <label>Password:
+            <input type="password" id="loginPassword">
+        </label>
+
+        <a href="#" data-role="button" onclick="login()">Login</a>
+
+        <p>Default password is <strong>1234</strong>.</p>
+        <div id="loginMsg" style="color:red;"></div>
+    </div>
+
 </div>
 
+<div data-role="page" id="menuPage">
 
-<div id="menuPage" class="page">
-    <h2>Menu</h2>
-    <button onclick="showPage('infoPage')">1. Info / Change Password</button><br>
-    <button onclick="showPage('settingsPage')">2. Change Basic Info</button><br>
-    <button onclick="showPage('transPage')">3. Enter Credit / Debit</button><br>
-    <button onclick="showPage('graphPage'); drawGraph();">4. Graph Balance</button><br>
-    <button onclick="showPage('recPage'); updateRec();">5. Recommendations</button><br><br>
-    <button onclick="logout()">Logout</button>
+    <div data-role="header">
+        <h1>Main Menu</h1>
+    </div>
+
+    <div data-role="content">
+        <p><strong>Bank:</strong> <span id="menuBank"></span></p>
+        <p><strong>Current balance:</strong> <span id="menuBal"></span></p>
+
+        <a href="#infoPage"      data-role="button">1. Info / Change Password</a>
+        <a href="#settingsPage"  data-role="button">2. Change Basic Info</a>
+        <a href="#transPage"     data-role="button">3. Enter Credit / Debit</a>
+        <a href="#graphPage"     data-role="button">4. Graph Balance</a>
+        <a href="#recPage"       data-role="button">5. Recommendations</a>
+
+        <a href="#loginPage" data-role="button" onclick="logout()">Logout</a>
+    </div>
+
 </div>
 
-<div id="infoPage" class="page">
-    <h2>Account Info</h2>
-    <p>Bank: <span id="infoBank"></span></p>
-    <p>Date opened: <span id="infoDate"></span></p>
-    <p>Current balance: <span id="infoBal"></span></p>
+<div data-role="page" id="infoPage">
 
-    <h3>Change Password</h3>
-    <label>Old password:
-        <input type="password" id="oldPw">
-    </label>
-    <label>New password:
-        <input type="password" id="newPw">
-    </label>
-    <button onclick="changePassword()">Save Password</button>
-    <button onclick="showPage('menuPage')">Back</button>
-    <div id="infoMsg"></div>
+    <div data-role="header">
+        <h1>Account Info</h1>
+    </div>
+
+    <div data-role="content">
+
+        <p>Bank: <span id="infoBank"></span></p>
+        <p>Date Opened: <span id="infoDate"></span></p>
+        <p>Current Balance: <span id="infoBal"></span></p>
+
+        <h3>Change Password</h3>
+
+        <label>Old password:
+            <input type="password" id="oldPw">
+        </label>
+
+        <label>New password:
+            <input type="password" id="newPw">
+        </label>
+
+        <a href="#" data-role="button" onclick="changePassword()">Save Password</a>
+        <a href="#menuPage" data-role="button">Back to Menu</a>
+
+        <div id="infoMsg"></div>
+    </div>
+
 </div>
 
+<div data-role="page" id="settingsPage">
 
-<div id="settingsPage" class="page">
-    <h2>Basic Info</h2>
-    <label>Bank name:
-        <input type="text" id="setBank">
-    </label>
-    <label>Date opened (YYYY-MM-DD):
-        <input type="text" id="setDate">
-    </label>
-    <label>Maximum negative balance p (positive):
-        <input type="number" id="setMaxNeg" step="0.01">
-    </label>
-    <label>Negative interest rate x (e.g. 0.10):
-        <input type="number" id="setNegRate" step="0.01">
-    </label>
-    <label>Positive interest rate y (e.g. 0.02):
-        <input type="number" id="setPosRate" step="0.01">
-    </label>
-    <button onclick="saveSettings()">Save</button>
-    <button onclick="showPage('menuPage')">Back</button>
-    <div id="setMsg"></div>
+    <div data-role="header">
+        <h1>Basic Settings</h1>
+    </div>
+
+    <div data-role="content">
+
+        <label>Bank name:
+            <input type="text" id="setBank">
+        </label>
+
+        <label>Date opened (YYYY-MM-DD):
+            <input type="text" id="setDate">
+        </label>
+
+        <label>Maximum negative balance p (positive):
+            <input type="number" id="setMaxNeg" step="0.01">
+        </label>
+
+        <label>Negative interest rate x (e.g. 0.10):
+            <input type="number" id="setNegRate" step="0.01">
+        </label>
+
+        <label>Positive interest rate y (e.g. 0.02):
+            <input type="number" id="setPosRate" step="0.01">
+        </label>
+
+        <a href="#" data-role="button" onclick="saveSettings()">Save</a>
+        <a href="#menuPage" data-role="button">Back to Menu</a>
+
+        <div id="setMsg"></div>
+    </div>
+
 </div>
 
+<div data-role="page" id="transPage">
 
-<div id="transPage" class="page">
-    <h2>Credit / Debit</h2>
-    <label>Date (YYYY-MM-DD, blank = today):
-        <input type="text" id="tDate">
-    </label>
-    <label>Amount (positive number):
-        <input type="number" id="tAmount" step="0.01">
-    </label>
-    <label>
-        <input type="radio" name="tType" value="credit" checked> Credit (deposit/payment)
-    </label>
-    <label>
-        <input type="radio" name="tType" value="debit"> Debit (withdraw/spend)
-    </label>
-    <label>Note:
-        <input type="text" id="tNote">
-    </label>
-    <button onclick="addTrans()">Add</button>
-    <button onclick="showPage('menuPage')">Back</button>
-    <div id="tMsg"></div>
-    <p><b>Current balance: <span id="transBal"></span></b></p>
+    <div data-role="header">
+        <h1>Credit / Debit</h1>
+    </div>
 
-    <h3>Transactions</h3>
-    <table id="tTable">
-        <thead>
-        <tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance after</th><th>Note</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div data-role="content">
+
+        <label>Date (YYYY-MM-DD, blank = today):
+            <input type="text" id="tDate">
+        </label>
+
+        <label>Amount (positive number):
+            <input type="number" id="tAmount" step="0.01">
+        </label>
+
+        <label>
+            <input type="radio" name="tType" value="credit" checked> Credit (deposit/payment)
+        </label>
+        <label>
+            <input type="radio" name="tType" value="debit"> Debit (withdraw/spend)
+        </label>
+
+        <label>Note:
+            <input type="text" id="tNote">
+        </label>
+
+        <a href="#" data-role="button" onclick="addTrans()">Add Transaction</a>
+        <a href="#menuPage" data-role="button">Back</a>
+
+        <div id="tMsg"></div>
+        <p><strong>Current balance: <span id="transBal"></span></strong></p>
+
+        <h3>Transactions</h3>
+        <table id="tTable">
+            <thead>
+            <tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th><th>Note</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
 </div>
 
+<div data-role="page" id="graphPage">
 
-<div id="graphPage" class="page">
-    <h2>Balance Graph</h2>
-    <canvas id="graph" width="600" height="300" style="border:1px solid #000;"></canvas><br>
-    <button onclick="drawGraph()">Refresh</button>
-    <button onclick="showPage('menuPage')">Back</button>
+    <div data-role="header">
+        <h1>Balance Graph</h1>
+    </div>
+
+    <div data-role="content">
+
+        <canvas id="graph" width="300" height="200"></canvas>
+
+        <a href="#" data-role="button" onclick="drawGraph()">Refresh Graph</a>
+        <a href="#menuPage" data-role="button">Back to Menu</a>
+
+    </div>
+
 </div>
 
+<div data-role="page" id="recPage">
 
-<div id="recPage" class="page">
-    <h2>Recommendations</h2>
-    <textarea id="recText" rows="12" cols="70" readonly></textarea><br>
-    <button onclick="updateRec()">Refresh</button>
-    <button onclick="showPage('menuPage')">Back</button>
+    <div data-role="header">
+        <h1>Recommendations</h1>
+    </div>
+
+    <div data-role="content">
+
+        <textarea id="recText" rows="10" readonly></textarea>
+
+        <a href="#" data-role="button" onclick="updateRec()">Refresh</a>
+        <a href="#menuPage" data-role="button">Back</a>
+
+    </div>
+
 </div>
 
 <script>
     var model = {
         bankName: "My Bank",
-        openDate: new Date().toISOString().substring(0,10),
+        openDate: new Date().toISOString().substring(0, 10),
         password: "1234",
         maxNeg: 1000.0,   
-        negRate: 0.10,    
-        posRate: 0.02,    
+        negRate: 0.10,   
+        posRate: 0.02,  
         startBal: 0.0,
-        trans: []        
+        trans: []         
     };
 
     function currBal() {
@@ -150,7 +221,6 @@
         return model.trans[model.trans.length - 1].balance;
     }
 
-     
     function applyInterestOnce(balance) {
         if (balance < 0) {
             return balance * (1 + model.negRate);
@@ -161,39 +231,23 @@
         }
     }
 
-    
-    function showPage(id) {
-        var pages = document.getElementsByClassName("page");
-        for (var i=0; i<pages.length; i++) pages[i].style.display = "none";
-        document.getElementById(id).style.display = "block";
-
-        document.getElementById("topInfo").innerHTML =
-            "Bank: " + model.bankName + " | Balance: " + currBal().toFixed(2);
-
-        if (id === "infoPage") fillInfo();
-        if (id === "settingsPage") fillSettings();
-        if (id === "transPage") refreshTransTable();
-    }
-
-    function logout() {
-        document.getElementById("loginPassword").value = "";
-        document.getElementById("loginMsg").innerHTML = "";
-        document.getElementById("topInfo").innerHTML = "";
-        showPage("loginPage");
-    }
-
-   
     function login() {
         var pw = document.getElementById("loginPassword").value;
         if (pw === model.password) {
             document.getElementById("loginMsg").innerHTML = "";
-            showPage("menuPage");
+            $("#loginPassword").val("");
+            $.mobile.changePage("#menuPage");
         } else {
             document.getElementById("loginMsg").innerHTML = "Wrong password.";
         }
     }
 
-    
+    function logout() {
+        $("#loginPassword").val("");
+        $("#loginMsg").text("");
+        $.mobile.changePage("#loginPage");
+    }
+
     function fillInfo() {
         document.getElementById("infoBank").innerHTML = model.bankName;
         document.getElementById("infoDate").innerHTML = model.openDate;
@@ -218,11 +272,10 @@
         document.getElementById("infoMsg").innerHTML = "Password updated.";
     }
 
- 
     function fillSettings() {
-        document.getElementById("setBank").value = model.bankName;
-        document.getElementById("setDate").value = model.openDate;
-        document.getElementById("setMaxNeg").value = model.maxNeg;
+        document.getElementById("setBank").value    = model.bankName;
+        document.getElementById("setDate").value    = model.openDate;
+        document.getElementById("setMaxNeg").value  = model.maxNeg;
         document.getElementById("setNegRate").value = model.negRate;
         document.getElementById("setPosRate").value = model.posRate;
         document.getElementById("setMsg").innerHTML = "";
@@ -230,16 +283,16 @@
 
     function saveSettings() {
         var msg = "";
-        var bank = document.getElementById("setBank").value;
-        var date = document.getElementById("setDate").value;
+        var bank   = document.getElementById("setBank").value;
+        var date   = document.getElementById("setDate").value;
         var maxNeg = parseFloat(document.getElementById("setMaxNeg").value);
-        var negRate = parseFloat(document.getElementById("setNegRate").value);
-        var posRate = parseFloat(document.getElementById("setPosRate").value);
+        var negR   = parseFloat(document.getElementById("setNegRate").value);
+        var posR   = parseFloat(document.getElementById("setPosRate").value);
 
         if (bank === "") msg = "Bank name required.";
         else if (isNaN(Date.parse(date))) msg = "Bad date.";
         else if (!(maxNeg > 0)) msg = "Max negative must be positive.";
-        else if (isNaN(negRate) || isNaN(posRate)) msg = "Bad rate.";
+        else if (isNaN(negR) || isNaN(posR)) msg = "Bad rate.";
 
         if (msg !== "") {
             document.getElementById("setMsg").innerHTML = msg;
@@ -248,21 +301,20 @@
 
         model.bankName = bank;
         model.openDate = date;
-        model.maxNeg = maxNeg;
-        model.negRate = negRate;
-        model.posRate = posRate;
+        model.maxNeg   = maxNeg;
+        model.negRate  = negR;
+        model.posRate  = posR;
         document.getElementById("setMsg").innerHTML = "Saved.";
     }
 
-    
     function addTrans() {
         var msg = "";
         var date = document.getElementById("tDate").value;
-        if (date === "") date = new Date().toISOString().substring(0,10);
-        if (isNaN(Date.parse(date))) msg = "Bad date";
+        if (date === "") date = new Date().toISOString().substring(0, 10);
+        if (isNaN(Date.parse(date))) msg = "Bad date.";
 
         var amount = parseFloat(document.getElementById("tAmount").value);
-        if (!(amount > 0)) msg = "Amount must be positive";
+        if (!(amount > 0)) msg = "Amount must be positive.";
 
         if (msg !== "") {
             document.getElementById("tMsg").innerHTML = msg;
@@ -270,14 +322,11 @@
         }
 
         var typeElems = document.getElementsByName("tType");
-        var type = "credit";
-        if (typeElems[1].checked) type = "debit";
-
+        var type = typeElems[0].checked ? "credit" : "debit";
         var note = document.getElementById("tNote").value;
 
         var signed = (type === "debit") ? -amount : amount;
 
-      
         var balBefore = currBal();
         var balAfterInterest = applyInterestOnce(balBefore);
         var newBal = balAfterInterest + signed;
@@ -306,10 +355,10 @@
     function refreshTransTable() {
         var tbody = document.getElementById("tTable").getElementsByTagName("tbody")[0];
         tbody.innerHTML = "";
-        for (var i=0; i<model.trans.length; i++) {
+        for (var i = 0; i < model.trans.length; i++) {
             var t = model.trans[i];
             var row = document.createElement("tr");
-            function cell(txt){
+            function cell(txt) {
                 var td = document.createElement("td");
                 td.appendChild(document.createTextNode(txt));
                 row.appendChild(td);
@@ -324,97 +373,107 @@
         document.getElementById("transBal").innerHTML = currBal().toFixed(2);
     }
 
-    
     function drawGraph() {
         var c = document.getElementById("graph");
         var ctx = c.getContext("2d");
-        ctx.clearRect(0,0,c.width,c.height);
+        ctx.clearRect(0, 0, c.width, c.height);
 
-       
         var xs = [];
         var ys = [];
+
         xs.push(0);
         ys.push(model.startBal);
-        for (var i=0; i<model.trans.length; i++) {
-            xs.push(i+1);
+        for (var i = 0; i < model.trans.length; i++) {
+            xs.push(i + 1);
             ys.push(model.trans[i].balance);
         }
+
         if (xs.length === 1) {
-            ctx.fillText("No data yet.", 10,20);
+            ctx.fillText("No data yet.", 10, 20);
             return;
         }
 
-       
         var minY = ys[0], maxY = ys[0];
-        for (var j=1;j<ys.length;j++){
-            if (ys[j]<minY) minY=ys[j];
-            if (ys[j]>maxY) maxY=ys[j];
+        for (var j = 1; j < ys.length; j++) {
+            if (ys[j] < minY) minY = ys[j];
+            if (ys[j] > maxY) maxY = ys[j];
         }
         if (minY === maxY) { minY -= 1; maxY += 1; }
 
-       
         var left = 40, bottom = 20, top = 10, right = 10;
         var w = c.width - left - right;
         var h = c.height - top - bottom;
 
         ctx.beginPath();
         ctx.moveTo(left, top);
-        ctx.lineTo(left, top+h);
-        ctx.lineTo(left+w, top+h);
+        ctx.lineTo(left, top + h);
+        ctx.lineTo(left + w, top + h);
         ctx.stroke();
 
-    
         ctx.beginPath();
-        for (var k=0;k<xs.length;k++){
-            var x = left + (xs[k]/(xs.length-1))*w;
-            var y = top + h - ((ys[k]-minY)/(maxY-minY))*h;
-            if (k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        for (var k = 0; k < xs.length; k++) {
+            var x = left + (xs[k] / (xs.length - 1)) * w;
+            var y = top + h - ((ys[k] - minY) / (maxY - minY)) * h;
+            if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.strokeStyle = "blue";
         ctx.stroke();
         ctx.strokeStyle = "black";
 
-        ctx.fillText("Balance", 5,15);
+        ctx.fillText("Balance", 5, 15);
     }
 
- 
     function updateRec() {
         var b = currBal();
         var txt = "";
 
-        if (b < -0.9*model.maxNeg) {
+        if (b < -0.9 * model.maxNeg) {
             txt += "Balance is very close to maximum negative.\n";
             txt += "Recommendation: Pay as soon as possible.\n";
-        } else if (b < -0.5*model.maxNeg) {
+        } else if (b < -0.5 * model.maxNeg) {
             txt += "Balance is strongly negative.\n";
             txt += "Recommendation: Reduce spending and make a plan.\n";
         } else if (b < 0) {
             txt += "Balance is slightly negative.\n";
             txt += "Recommendation: Try to get to zero soon.\n";
-        } else if (b < 0.5*model.maxNeg) {
+        } else if (b < 0.5 * model.maxNeg) {
             txt += "Balance is positive.\n";
             txt += "Recommendation: Keep watching your spending.\n";
         } else {
             txt += "Balance is very positive.\n";
-            txt += "Recommendation: Maybe move extra money to savings or investments.\n";
+            txt += "Recommendation: Consider moving extra funds to savings or investments.\n";
         }
 
         txt += "\nCurrent balance: " + b.toFixed(2);
         txt += "\nMax negative: -" + model.maxNeg.toFixed(2);
-        txt += "\nNegative interest x: " + (model.negRate*100).toFixed(1) + "%";
-        txt += "\nPositive interest y: " + (model.posRate*100).toFixed(1) + "%";
+        txt += "\nNegative interest x: " + (model.negRate * 100).toFixed(1) + "%";
+        txt += "\nPositive interest y: " + (model.posRate * 100).toFixed(1) + "%";
 
         document.getElementById("recText").value = txt;
     }
+
+    $(document).on("pagebeforeshow", "#menuPage", function () {
+        $("#menuBank").text(model.bankName);
+        $("#menuBal").text(currBal().toFixed(2));
+    });
+
+    $(document).on("pagebeforeshow", "#infoPage", function () {
+        fillInfo();
+    });
+
+    $(document).on("pagebeforeshow", "#settingsPage", function () {
+        fillSettings();
+    });
+
+    $(document).on("pagebeforeshow", "#transPage", function () {
+        refreshTransTable();
+    });
+
+    $(document).on("pagebeforeshow", "#recPage", function () {
+        updateRec();
+    });
+
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
